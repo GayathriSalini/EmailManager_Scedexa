@@ -4,15 +4,19 @@ import SentEmail from '@/models/SentEmail';
 import ReceivedEmail from '@/models/ReceivedEmail';
 import mongoose from 'mongoose';
 
+interface RouteParams {
+  params: Promise<{ id: string }>;
+}
+
 // GET: List all threads for an account
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     await connectDB();
 
-    const { id } = params;
+    const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
