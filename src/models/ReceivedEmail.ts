@@ -4,13 +4,17 @@ export interface IReceivedEmail extends Document {
   _id: mongoose.Types.ObjectId;
   accountId: mongoose.Types.ObjectId;
   resendId?: string;
-  messageId?: string;
+  messageId?: string; // Email Message-ID header for threading
   from: string;
   fromName?: string;
   to: string;
   subject: string;
   body: string;
   html?: string;
+  // Threading fields
+  threadId?: string; // Common thread identifier
+  inReplyTo?: string; // Message-ID of the email being replied to
+  references?: string[]; // Chain of Message-IDs in the thread
   attachments?: {
     filename: string;
     contentType: string;
@@ -40,6 +44,7 @@ const ReceivedEmailSchema = new Schema<IReceivedEmail>(
     messageId: {
       type: String,
       sparse: true,
+      index: true,
     },
     from: {
       type: String,
@@ -63,6 +68,18 @@ const ReceivedEmailSchema = new Schema<IReceivedEmail>(
     },
     html: {
       type: String,
+    },
+    // Threading fields
+    threadId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    inReplyTo: {
+      type: String,
+    },
+    references: {
+      type: [String],
     },
     attachments: [
       {
@@ -94,9 +111,10 @@ const ReceivedEmailSchema = new Schema<IReceivedEmail>(
   }
 );
 
-// Index for faster queries
+// Indexes for faster queries
 ReceivedEmailSchema.index({ accountId: 1, receivedAt: -1 });
 ReceivedEmailSchema.index({ accountId: 1, isRead: 1 });
+ReceivedEmailSchema.index({ threadId: 1, receivedAt: 1 });
 
 const ReceivedEmail: Model<IReceivedEmail> =
   mongoose.models.ReceivedEmail || mongoose.model<IReceivedEmail>('ReceivedEmail', ReceivedEmailSchema);

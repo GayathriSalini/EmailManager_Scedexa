@@ -111,18 +111,18 @@ export default function InboxPage() {
       <EmailDetail
         email={selectedEmail}
         type="inbox"
+        accountId={accountId}
         onBack={() => setSelectedEmail(null)}
         onToggleStar={() => handleToggleStar(selectedEmail._id)}
-        onReply={() =>
-          router.push(
-            `/compose?to=${selectedEmail.from}&subject=Re: ${selectedEmail.subject}`,
-          )
-        }
         onForward={() =>
           router.push(`/compose?subject=Fwd: ${selectedEmail.subject}`)
         }
         onArchive={() => setSelectedEmail(null)}
         onDelete={() => setSelectedEmail(null)}
+        onReplySent={() => {
+          // Refresh emails after reply is sent
+          fetchEmails();
+        }}
       />
     );
   }
@@ -163,14 +163,14 @@ export default function InboxPage() {
 
       {/* Search */}
       <div className="px-4 md:px-6 py-2 md:py-3 border-b border-[var(--border)]">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
+        <div className="input-wrapper">
+          <Search className="input-icon w-4 h-4" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search..."
-            className="input pl-9 text-sm"
+            className="input input-with-icon text-sm"
           />
         </div>
       </div>

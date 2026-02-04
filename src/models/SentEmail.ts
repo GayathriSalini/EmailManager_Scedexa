@@ -4,6 +4,7 @@ export interface ISentEmail extends Document {
   _id: mongoose.Types.ObjectId;
   accountId: mongoose.Types.ObjectId;
   resendId: string;
+  messageId?: string; // Email Message-ID header for threading
   from: string;
   to: string[];
   cc?: string[];
@@ -11,6 +12,10 @@ export interface ISentEmail extends Document {
   subject: string;
   body: string;
   html?: string;
+  // Threading fields
+  threadId?: string; // Common thread identifier
+  inReplyTo?: string; // Message-ID of the email being replied to
+  references?: string[]; // Chain of Message-IDs in the thread
   status: 'queued' | 'sent' | 'delivered' | 'bounced' | 'failed';
   sentAt: Date;
   createdAt: Date;
@@ -29,6 +34,11 @@ const SentEmailSchema = new Schema<ISentEmail>(
       type: String,
       required: true,
       unique: true,
+    },
+    messageId: {
+      type: String,
+      sparse: true,
+      index: true,
     },
     from: {
       type: String,
@@ -55,6 +65,18 @@ const SentEmailSchema = new Schema<ISentEmail>(
     html: {
       type: String,
     },
+    // Threading fields
+    threadId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
+    inReplyTo: {
+      type: String,
+    },
+    references: {
+      type: [String],
+    },
     status: {
       type: String,
       enum: ['queued', 'sent', 'delivered', 'bounced', 'failed'],
@@ -70,8 +92,9 @@ const SentEmailSchema = new Schema<ISentEmail>(
   }
 );
 
-// Index for faster queries
+// Indexes for faster queries
 SentEmailSchema.index({ accountId: 1, sentAt: -1 });
+SentEmailSchema.index({ threadId: 1, sentAt: 1 });
 
 const SentEmail: Model<ISentEmail> =
   mongoose.models.SentEmail || mongoose.model<ISentEmail>('SentEmail', SentEmailSchema);

@@ -12,8 +12,12 @@ import {
   ChevronRight,
   X,
   Menu,
+  MessageSquare,
+  LogOut,
+  User,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/components/AuthProvider";
 
 interface EmailAccount {
   _id: string;
@@ -25,39 +29,65 @@ interface EmailAccount {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedAccount, setExpandedAccount] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newAccount, setNewAccount] = useState({
     name: "",
-    email: "",
+    username: "",
     color: "#000000",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Fetch accounts when user is authenticated
   useEffect(() => {
-    fetchAccounts();
-  }, []);
+    if (user) {
+      fetchAccounts();
+    } else {
+      // Clear accounts when logged out
+      setAccounts([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = async (retryCount = 0) => {
     try {
+      setLoading(true);
       const res = await fetch("/api/accounts");
+
+      // Handle unauthorized - don't show error, user might be logging in
+      if (res.status === 401) {
+        setAccounts([]);
+        setLoading(false);
+        return;
+      }
+
       const data = await res.json();
       if (data.success) {
         setAccounts(data.data);
         if (data.data.length > 0 && !expandedAccount) {
           setExpandedAccount(data.data[0]._id);
         }
+      } else if (retryCount < 2) {
+        // Retry once after a short delay
+        setTimeout(() => fetchAccounts(retryCount + 1), 500);
+        return;
       }
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
+      // Retry on network error
+      if (retryCount < 2) {
+        setTimeout(() => fetchAccounts(retryCount + 1), 500);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -67,16 +97,23 @@ export default function Sidebar() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Construct email from username with fixed domain
+      const email = `${newAccount.username}@mail.scedexa.com`;
+
       const res = await fetch("/api/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newAccount),
+        body: JSON.stringify({
+          name: newAccount.name,
+          email,
+          color: newAccount.color,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setAccounts([data.data, ...accounts]);
         setShowAddModal(false);
-        setNewAccount({ name: "", email: "", color: "#000000" });
+        setNewAccount({ name: "", username: "", color: "#000000" });
       }
     } catch (error) {
       console.error("Failed to add account:", error);
@@ -229,6 +266,18 @@ export default function Sidebar() {
                       <Send className="w-3.5 h-3.5" />
                       Sent
                     </Link>
+                    <Link
+                      href={`/accounts/${account._id}/threads`}
+                      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                        pathname === `/accounts/${account._id}/threads` ||
+                        pathname.startsWith(`/accounts/${account._id}/threads/`)
+                          ? "bg-[var(--secondary)] font-medium"
+                          : "hover:bg-[var(--secondary)] text-[var(--muted-foreground)]"
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Threads
+                    </Link>
                   </div>
                 )}
               </div>
@@ -238,7 +287,7 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-[var(--border)]">
+      <div className="p-3 border-t border-[var(--border)] space-y-1">
         <Link
           href="/settings"
           className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--muted-foreground)] hover:bg-[var(--secondary)] transition-colors"
@@ -246,6 +295,21 @@ export default function Sidebar() {
           <Settings className="w-4 h-4" />
           Settings
         </Link>
+        {user && (
+          <>
+            <div className="flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--muted-foreground)]">
+              <User className="w-4 h-4" />
+              <span className="truncate">{user.username}</span>
+            </div>
+            <button
+              onClick={logout}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-[var(--destructive)] hover:bg-[#fee2e2] transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </>
+        )}
       </div>
     </>
   );
@@ -325,16 +389,26 @@ export default function Sidebar() {
                 <label className="block text-sm font-medium mb-1.5">
                   Email
                 </label>
-                <input
-                  type="email"
-                  className="input"
-                  placeholder="outreach@domain.com"
-                  value={newAccount.email}
-                  onChange={(e) =>
-                    setNewAccount({ ...newAccount, email: e.target.value })
-                  }
-                  required
-                />
+                <div className="flex items-center gap-0">
+                  <input
+                    type="text"
+                    className="input rounded-r-none flex-1"
+                    placeholder="username"
+                    value={newAccount.username}
+                    onChange={(e) =>
+                      setNewAccount({
+                        ...newAccount,
+                        username: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9._-]/g, ""),
+                      })
+                    }
+                    required
+                  />
+                  <span className="px-3 py-2 bg-[var(--secondary)] border border-l-0 border-[var(--border)] rounded-r-md text-sm text-[var(--muted-foreground)] whitespace-nowrap">
+                    @mail.scedexa.com
+                  </span>
+                </div>
               </div>
 
               <div>

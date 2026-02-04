@@ -83,6 +83,7 @@ export default function SentPage() {
       <EmailDetail
         email={{ ...selectedEmail, from: account?.email || "" }}
         type="sent"
+        accountId={accountId}
         onBack={() => setSelectedEmail(null)}
         onForward={() =>
           router.push(`/compose?subject=Fwd: ${selectedEmail.subject}`)
@@ -94,22 +95,22 @@ export default function SentPage() {
   return (
     <div className="h-full flex flex-col animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)]">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-[var(--border)]">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
           {account && (
             <span
-              className="w-8 h-8 rounded flex items-center justify-center text-white text-sm font-medium"
+              className="w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center text-white text-xs md:text-sm font-medium flex-shrink-0"
               style={{ backgroundColor: account.color }}
             >
               {account.name[0].toUpperCase()}
             </span>
           )}
-          <div>
-            <div className="flex items-center gap-2">
-              <Send className="w-4 h-4" />
-              <h1 className="font-semibold">Sent</h1>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1 md:gap-2">
+              <Send className="w-3.5 md:w-4 h-3.5 md:h-4" />
+              <h1 className="font-semibold text-sm md:text-base">Sent</h1>
             </div>
-            <p className="text-sm text-[var(--muted-foreground)]">
+            <p className="text-xs md:text-sm text-[var(--muted-foreground)] truncate">
               {account?.email}
             </p>
           </div>
@@ -117,7 +118,7 @@ export default function SentPage() {
         <button
           onClick={handleRefresh}
           disabled={refreshing}
-          className="p-2 rounded hover:bg-[var(--secondary)] transition-colors"
+          className="p-1.5 md:p-2 rounded hover:bg-[var(--secondary)] transition-colors flex-shrink-0"
         >
           <RefreshCw
             className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
@@ -126,15 +127,15 @@ export default function SentPage() {
       </div>
 
       {/* Search */}
-      <div className="px-6 py-3 border-b border-[var(--border)]">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted-foreground)]" />
+      <div className="px-4 md:px-6 py-2 md:py-3 border-b border-[var(--border)]">
+        <div className="input-wrapper">
+          <Search className="input-icon w-4 h-4" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search..."
-            className="input pl-9"
+            className="input input-with-icon text-sm"
           />
         </div>
       </div>

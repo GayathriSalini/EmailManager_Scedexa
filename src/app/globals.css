@@ -152,6 +152,25 @@ body {
   color: var(--muted-foreground);
 }
 
+/* Input with icon wrapper */
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.input-with-icon {
+  padding-left: 2.5rem;
+}
+
 /* Card styles - minimal */
 .card {
   background: var(--card);

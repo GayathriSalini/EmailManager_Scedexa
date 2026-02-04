@@ -31,16 +31,28 @@ export default function ComposeForm() {
     fetchAccounts();
   }, []);
 
-  const fetchAccounts = async () => {
+  const fetchAccounts = async (retryCount = 0) => {
     try {
       const res = await fetch("/api/accounts");
+
+      // Handle unauthorized
+      if (res.status === 401) {
+        return;
+      }
+
       const data = await res.json();
       if (data.success && data.data.length > 0) {
         setAccounts(data.data);
         setSelectedAccount(data.data[0]._id);
+      } else if (retryCount < 2) {
+        // Retry after a short delay
+        setTimeout(() => fetchAccounts(retryCount + 1), 500);
       }
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
+      if (retryCount < 2) {
+        setTimeout(() => fetchAccounts(retryCount + 1), 500);
+      }
     }
   };
 
