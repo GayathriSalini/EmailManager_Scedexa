@@ -180,7 +180,7 @@ export default function InboxPage() {
         <EmailList
           emails={filteredEmails}
           type="inbox"
-          selectedId={selectedEmail?._id}
+          selectedId={undefined}
           onSelect={handleSelectEmail}
           onToggleStar={handleToggleStar}
           loading={loading}
