@@ -157,7 +157,9 @@ export default function ThreadsPage() {
                   )
                 }
                 className={`flex items-start gap-3 p-4 cursor-pointer transition-colors hover:bg-[var(--secondary)] ${
-                  thread.unreadCount > 0 ? "bg-blue-50 border-l-[3px] border-l-blue-500" : ""
+                  thread.unreadCount > 0
+                    ? "bg-blue-50 border-l-[3px] border-l-blue-500"
+                    : ""
                 }`}
               >
                 {/* Icon */}

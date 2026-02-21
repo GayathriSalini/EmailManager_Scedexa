@@ -114,7 +114,10 @@ export function NotificationProvider({
 
   const addToast = useCallback((from: string, subject: string) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    setToasts((prev) => [...prev, { id, from, subject, timestamp: Date.now() }]);
+    setToasts((prev) => [
+      ...prev,
+      { id, from, subject, timestamp: Date.now() },
+    ]);
 
     // Auto-remove toast
     setTimeout(() => {
@@ -216,7 +219,13 @@ export function NotificationProvider({
 
   return (
     <NotificationContext.Provider
-      value={{ totalUnread, recentUnread, notificationsEnabled, requestPermission, refreshSignal }}
+      value={{
+        totalUnread,
+        recentUnread,
+        notificationsEnabled,
+        requestPermission,
+        refreshSignal,
+      }}
     >
       {children}
 
