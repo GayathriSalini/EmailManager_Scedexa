@@ -31,6 +31,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         .sort({ sentAt: -1 })
         .skip(skip)
         .limit(limit)
+        .select('-html')
         .lean(),
       SentEmail.countDocuments({ accountId: new mongoose.Types.ObjectId(id) }),
     ]);

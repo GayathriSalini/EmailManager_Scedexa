@@ -36,8 +36,8 @@ export default function SentPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetchAccount();
-    fetchEmails();
+    // Fetch account and emails in parallel
+    Promise.all([fetchAccount(), fetchEmails()]);
   }, [accountId]);
 
   const fetchAccount = async () => {

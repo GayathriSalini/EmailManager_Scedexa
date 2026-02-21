@@ -6,7 +6,7 @@ import EmailAccount from '@/models/EmailAccount';
 export async function GET() {
   try {
     await connectDB();
-    const accounts = await EmailAccount.find({ isActive: true }).sort({ createdAt: -1 });
+    const accounts = await EmailAccount.find({ isActive: true }).sort({ createdAt: -1 }).lean();
     return NextResponse.json({ success: true, data: accounts });
   } catch (error) {
     console.error('Error fetching accounts:', error);

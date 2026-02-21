@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { NotificationBell } from "@/components/NotificationProvider";
 
 interface EmailAccount {
   _id: string;
@@ -76,16 +77,22 @@ export default function Sidebar() {
         if (data.data.length > 0 && !expandedAccount) {
           setExpandedAccount(data.data[0]._id);
         }
-      } else if (retryCount < 2) {
-        // Retry once after a short delay
-        setTimeout(() => fetchAccounts(retryCount + 1), 500);
+      } else if (retryCount < 1) {
+        // Retry once with exponential backoff
+        setTimeout(
+          () => fetchAccounts(retryCount + 1),
+          2000 * (retryCount + 1),
+        );
         return;
       }
     } catch (error) {
       console.error("Failed to fetch accounts:", error);
-      // Retry on network error
-      if (retryCount < 2) {
-        setTimeout(() => fetchAccounts(retryCount + 1), 500);
+      // Retry on network error with backoff
+      if (retryCount < 1) {
+        setTimeout(
+          () => fetchAccounts(retryCount + 1),
+          2000 * (retryCount + 1),
+        );
         return;
       }
     } finally {
@@ -141,12 +148,15 @@ export default function Sidebar() {
           <Mail className="w-5 h-5" />
           <span className="font-semibold text-lg">Mail</span>
         </Link>
-        <button
-          onClick={() => setIsMobileOpen(false)}
-          className="p-1.5 rounded hover:bg-[var(--secondary)] md:hidden"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className="p-1.5 rounded hover:bg-[var(--secondary)] md:hidden"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Compose Button */}

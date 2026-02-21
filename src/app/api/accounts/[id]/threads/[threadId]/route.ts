@@ -28,21 +28,21 @@ export async function GET(
     const accountObjectId = new mongoose.Types.ObjectId(id);
     const decodedThreadId = decodeURIComponent(threadId);
 
-    // Get all sent emails in this thread
-    const sentEmails = await SentEmail.find({
-      accountId: accountObjectId,
-      threadId: decodedThreadId,
-    })
-      .sort({ sentAt: 1 })
-      .lean();
-
-    // Get all received emails in this thread
-    const receivedEmails = await ReceivedEmail.find({
-      accountId: accountObjectId,
-      threadId: decodedThreadId,
-    })
-      .sort({ receivedAt: 1 })
-      .lean();
+    // Get all sent and received emails in this thread in parallel
+    const [sentEmails, receivedEmails] = await Promise.all([
+      SentEmail.find({
+        accountId: accountObjectId,
+        threadId: decodedThreadId,
+      })
+        .sort({ sentAt: 1 })
+        .lean(),
+      ReceivedEmail.find({
+        accountId: accountObjectId,
+        threadId: decodedThreadId,
+      })
+        .sort({ receivedAt: 1 })
+        .lean(),
+    ]);
 
     // Combine and sort by date
     const allEmails = [

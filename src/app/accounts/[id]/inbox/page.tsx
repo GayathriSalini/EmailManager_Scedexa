@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { RefreshCw, Search } from "lucide-react";
 import EmailList from "@/components/EmailList";
 import EmailDetail from "@/components/EmailDetail";
+import { useNotifications } from "@/components/NotificationProvider";
 
 interface Email {
   _id: string;
@@ -36,7 +37,9 @@ interface Account {
 export default function InboxPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const accountId = params.id as string;
+  const emailIdFromUrl = searchParams.get("emailId");
 
   const [account, setAccount] = useState<Account | null>(null);
   const [emails, setEmails] = useState<Email[]>([]);
@@ -46,9 +49,42 @@ export default function InboxPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
 
+  const { refreshSignal } = useNotifications();
+
   useEffect(() => {
-    fetchAccount();
+    // Fetch account and emails in parallel
+    Promise.all([fetchAccount(), fetchEmails()]);
+  }, [accountId]);
+
+  // Auto-open email from URL query param (e.g. from notification click)
+  useEffect(() => {
+    if (emailIdFromUrl && emails.length > 0 && !selectedEmail) {
+      const email = emails.find((e) => e._id === emailIdFromUrl);
+      if (email) {
+        handleSelectEmail(email);
+        // Clean the URL without navigation
+        router.replace(`/accounts/${accountId}/inbox`, { scroll: false });
+      }
+    }
+  }, [emailIdFromUrl, emails]);
+
+  // Auto-refresh when notification system detects new emails
+  const initialSignal = useRef(true);
+  useEffect(() => {
+    if (initialSignal.current) {
+      initialSignal.current = false;
+      return;
+    }
+    // New emails detected — silently refresh the list
     fetchEmails();
+  }, [refreshSignal]);
+
+  // Also poll inbox directly every 15s as fallback
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchEmails();
+    }, 15000);
+    return () => clearInterval(interval);
   }, [accountId]);
 
   const fetchAccount = async () => {
@@ -87,10 +123,18 @@ export default function InboxPage() {
   const handleSelectEmail = (email: Email) => {
     setSelectedEmail(email);
     if (!email.isRead) {
+      // Update local state immediately
       setEmails(
         emails.map((e) => (e._id === email._id ? { ...e, isRead: true } : e)),
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      // Persist to database
+      fetch(`/api/accounts/${accountId}/inbox`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailIds: [email._id], isRead: true }),
+      }).catch((err) => console.error("Failed to mark as read:", err));
     }
   };
 

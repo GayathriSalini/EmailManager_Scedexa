@@ -14,6 +14,7 @@ import {
   Send,
   X,
 } from "lucide-react";
+import EmailAvatar from "@/components/EmailAvatar";
 
 interface Email {
   _id: string;
@@ -172,12 +173,7 @@ export default function EmailDetail({
 
         {/* Sender Info */}
         <div className="flex items-start gap-2 md:gap-3 mb-4 md:mb-6 pb-4 md:pb-6 border-b border-[var(--border)]">
-          <span
-            className="w-8 h-8 md:w-10 md:h-10 rounded flex items-center justify-center text-white text-sm font-medium flex-shrink-0"
-            style={{ backgroundColor: "#525252" }}
-          >
-            {(email.fromName || email.from)[0].toUpperCase()}
-          </span>
+          <EmailAvatar email={email.from} name={email.fromName} size="lg" />
           <div className="flex-1 min-w-0">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1 mb-0.5">
               <span className="font-medium text-sm md:text-base truncate">

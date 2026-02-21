@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     await connectDB();
-    const account = await EmailAccount.findById(id);
+    const account = await EmailAccount.findById(id).lean();
 
     if (!account) {
       return NextResponse.json(

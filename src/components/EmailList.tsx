@@ -2,6 +2,7 @@
 
 import { formatDate, truncate } from "@/lib/utils";
 import { Mail, Star, Paperclip } from "lucide-react";
+import EmailAvatar from "@/components/EmailAvatar";
 
 interface Email {
   _id: string;
@@ -91,15 +92,14 @@ export default function EmailList({
           onClick={() => onSelect(email)}
           className={`flex items-start gap-3 p-4 cursor-pointer transition-colors hover:bg-[var(--secondary)] ${
             selectedId === email._id ? "bg-[var(--secondary)]" : ""
-          } ${!email.isRead && type === "inbox" ? "bg-blue-50" : ""}`}
+          } ${!email.isRead && type === "inbox" ? "bg-blue-50 border-l-[3px] border-l-blue-500" : ""}`}
         >
           {/* Avatar */}
-          <span
-            className="w-8 h-8 rounded flex items-center justify-center text-white text-sm font-medium flex-shrink-0"
-            style={{ backgroundColor: "#525252" }}
-          >
-            {getDisplayName(email)[0].toUpperCase()}
-          </span>
+          <EmailAvatar
+            email={getDisplayEmail(email)}
+            name={getDisplayName(email)}
+            size="md"
+          />
 
           {/* Content */}
           <div className="flex-1 min-w-0">

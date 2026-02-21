@@ -27,35 +27,35 @@ export async function GET(
 
     const accountObjectId = new mongoose.Types.ObjectId(id);
 
-    // Get unique threads from sent emails
-    const sentThreads = await SentEmail.aggregate([
-      { $match: { accountId: accountObjectId, threadId: { $exists: true, $ne: null } } },
-      { $sort: { sentAt: -1 } },
-      {
-        $group: {
-          _id: '$threadId',
-          lastEmail: { $first: '$$ROOT' },
-          count: { $sum: 1 },
-          lastDate: { $max: '$sentAt' },
-        },
-      },
-    ]);
-
-    // Get unique threads from received emails
-    const receivedThreads = await ReceivedEmail.aggregate([
-      { $match: { accountId: accountObjectId, threadId: { $exists: true, $ne: null } } },
-      { $sort: { receivedAt: -1 } },
-      {
-        $group: {
-          _id: '$threadId',
-          lastEmail: { $first: '$$ROOT' },
-          count: { $sum: 1 },
-          lastDate: { $max: '$receivedAt' },
-          unreadCount: {
-            $sum: { $cond: [{ $eq: ['$isRead', false] }, 1, 0] },
+    // Get unique threads from sent and received emails in parallel
+    const [sentThreads, receivedThreads] = await Promise.all([
+      SentEmail.aggregate([
+        { $match: { accountId: accountObjectId, threadId: { $exists: true, $ne: null } } },
+        { $sort: { sentAt: -1 } },
+        {
+          $group: {
+            _id: '$threadId',
+            lastEmail: { $first: '$$ROOT' },
+            count: { $sum: 1 },
+            lastDate: { $max: '$sentAt' },
           },
         },
-      },
+      ]),
+      ReceivedEmail.aggregate([
+        { $match: { accountId: accountObjectId, threadId: { $exists: true, $ne: null } } },
+        { $sort: { receivedAt: -1 } },
+        {
+          $group: {
+            _id: '$threadId',
+            lastEmail: { $first: '$$ROOT' },
+            count: { $sum: 1 },
+            lastDate: { $max: '$receivedAt' },
+            unreadCount: {
+              $sum: { $cond: [{ $eq: ['$isRead', false] }, 1, 0] },
+            },
+          },
+        },
+      ]),
     ]);
 
     // Combine threads

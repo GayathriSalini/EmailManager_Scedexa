@@ -10,6 +10,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import EmailAvatar from "@/components/EmailAvatar";
 
 interface ThreadEmail {
   _id: string;
@@ -200,16 +201,12 @@ export default function ThreadViewPage() {
                   onClick={() => toggleEmail(email._id)}
                   className="w-full flex items-center gap-2 md:gap-3 p-3 hover:bg-[var(--secondary)] transition-colors text-left"
                 >
-                  <span
-                    className="w-7 h-7 md:w-8 md:h-8 rounded flex items-center justify-center text-white text-xs font-medium flex-shrink-0"
-                    style={{
-                      backgroundColor: isSent
-                        ? account?.color || "#2563eb"
-                        : "#525252",
-                    }}
-                  >
-                    {getEmailSender(email)[0].toUpperCase()}
-                  </span>
+                  <EmailAvatar
+                    email={isSent ? account?.email || email.from : email.from}
+                    name={getEmailSender(email)}
+                    size="sm"
+                    color={isSent ? account?.color || "#2563eb" : undefined}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-sm font-medium truncate">
