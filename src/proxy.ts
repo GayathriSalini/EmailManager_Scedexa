@@ -23,7 +23,7 @@ function isPublicRoute(pathname: string): boolean {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Allow public routes
@@ -55,9 +55,9 @@ export async function middleware(request: NextRequest) {
     const response = !pathname.startsWith("/api/")
       ? NextResponse.redirect(new URL("/login", request.url))
       : NextResponse.json(
-          { success: false, error: "Unauthorized" },
-          { status: 401 }
-        );
+        { success: false, error: "Unauthorized" },
+        { status: 401 }
+      );
 
     // Clear invalid cookie
     response.cookies.delete(COOKIE_NAME);
