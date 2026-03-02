@@ -1,11 +1,8 @@
-export const getEmailSignature = (isHtml: boolean = true): string => {
-  if (!isHtml) {
-    return '\n\nScedexa\nhttps://scedexa.com/\nLinkedIn: https://www.linkedin.com/company/scedexa/\nX: https://x.com/scedexa\nInstagram: https://www.instagram.com/scedexa_\nTikTok: https://www.tiktok.com/@scedexa_';
-  }
+export const getEmailSignature = (): string => {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const logoUrl = `${baseUrl}/logo.png`;
 
-  const logoUrl = 'https://res.cloudinary.com/dk932ubf7/image/upload/v1772463847/Group_27_z2ssrs.png';
-
-  return `
+    return `
     <br />
     <br />
     <table cellpadding="0" cellspacing="0" border="0" style="font-family: Arial, sans-serif; color: #333;">

@@ -6,6 +6,7 @@ import SentEmail from '@/models/SentEmail';
 import ReceivedEmail from '@/models/ReceivedEmail';
 import mongoose from 'mongoose';
 import crypto from 'crypto';
+import { getEmailSignature } from '@/lib/email-signature';
 
 // Generate a unique Message-ID
 function generateMessageId(domain: string): string {
@@ -83,7 +84,7 @@ export async function POST(request: NextRequest) {
 
       if (original && original.messageId) {
         finalInReplyTo = original.messageId;
-        
+
         // Build references chain
         if (original.references && original.references.length > 0) {
           finalReferences = [...original.references, original.messageId];
@@ -113,6 +114,16 @@ export async function POST(request: NextRequest) {
       headers['References'] = finalReferences.join(' ');
     }
 
+    // Append signature to both HTML and text content
+    const htmlSignature = getEmailSignature(true);
+    const textSignature = getEmailSignature(false);
+
+    const finalHtml = html
+      ? `${html}${htmlSignature}`
+      : `<p>${emailBody.replace(/\n/g, '<br>')}</p>${htmlSignature}`;
+
+    const finalBody = `${emailBody}${textSignature}`;
+
     // Send via Resend with threading headers
     const { data, error } = await resend.emails.send({
       from: fromAddress,
@@ -120,8 +131,8 @@ export async function POST(request: NextRequest) {
       cc: cc || undefined,
       bcc: bcc || undefined,
       subject,
-      html: html || `<p>${emailBody.replace(/\n/g, '<br>')}</p>`,
-      text: emailBody,
+      html: finalHtml,
+      text: finalBody,
       headers: Object.keys(headers).length > 0 ? headers : undefined,
     });
 
@@ -143,8 +154,8 @@ export async function POST(request: NextRequest) {
       cc,
       bcc,
       subject,
-      body: emailBody,
-      html,
+      body: finalBody,
+      html: finalHtml,
       // Threading fields
       threadId,
       inReplyTo: finalInReplyTo,

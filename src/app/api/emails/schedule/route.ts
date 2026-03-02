@@ -4,6 +4,7 @@ import resend from '@/lib/resend';
 import EmailAccount from '@/models/EmailAccount';
 import ScheduledEmail from '@/models/ScheduledEmail';
 import mongoose from 'mongoose';
+import { getEmailSignature } from '@/lib/email-signature';
 
 // POST: Schedule an email to multiple recipients
 export async function POST(request: NextRequest) {
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     // Validate scheduled time
     const scheduledDate = new Date(scheduledAt);
     const now = new Date();
-    
+
     if (scheduledDate <= now) {
       return NextResponse.json(
         { success: false, error: 'Scheduled time must be in the future' },
@@ -68,12 +69,22 @@ export async function POST(request: NextRequest) {
     // Schedule email for each recipient via Resend
     for (const recipient of recipientList) {
       try {
+        // Append signature to both HTML and text content
+        const htmlSignature = getEmailSignature(true);
+        const textSignature = getEmailSignature(false);
+
+        const finalHtml = html
+          ? `${html}${htmlSignature}`
+          : `<p>${emailBody.replace(/\n/g, '<br>')}</p>${htmlSignature}`;
+
+        const finalBody = `${emailBody}${textSignature}`;
+
         const { data, error } = await resend.emails.send({
           from: fromAddress,
           to: [recipient],
           subject,
-          html: html || `<p>${emailBody.replace(/\n/g, '<br>')}</p>`,
-          text: emailBody,
+          html: finalHtml,
+          text: finalBody,
           scheduledAt: scheduledDate.toISOString(),
         });
 
@@ -96,14 +107,14 @@ export async function POST(request: NextRequest) {
       from: fromAddress,
       recipients: recipientList,
       subject,
-      body: emailBody,
-      html,
+      body: finalBody,
+      html: finalHtml,
       scheduledAt: scheduledDate,
       status: failedRecipients.length === recipientList.length
         ? 'failed'
         : failedRecipients.length > 0
-        ? 'pending'
-        : 'pending',
+          ? 'pending'
+          : 'pending',
       failedRecipients,
     });
 

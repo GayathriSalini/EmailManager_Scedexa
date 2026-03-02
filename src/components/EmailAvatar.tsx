@@ -58,8 +58,11 @@ export default function EmailAvatar({
   const initial = displayName[0]?.toUpperCase() || "?";
   const bgColor = color || emailToColor(cleanEmail);
 
-  // Use unavatar.io — it aggregates Gravatar, Google, GitHub, etc.
-  const avatarUrl = `https://unavatar.io/${cleanEmail}?fallback=false`;
+  const isScedexa = cleanEmail.includes("scedexa");
+  const logoUrl = 'https://res.cloudinary.com/dk932ubf7/image/upload/v1772463847/Group_27_z2ssrs.png';
+
+  // Use the Scedexa logo for Scedexa emails, otherwise use unavatar.io
+  const avatarUrl = isScedexa ? logoUrl : `https://unavatar.io/${cleanEmail}?fallback=false`;
 
   return (
     <span

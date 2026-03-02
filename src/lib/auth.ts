@@ -10,11 +10,11 @@ const JWT_SECRET = new TextEncoder().encode(
 // Cookie configuration
 const COOKIE_NAME = "mailbox_session";
 const COOKIE_OPTIONS = {
-  httpOnly: true,        
-  secure: process.env.NODE_ENV === "production",  
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 60 * 60 * 24 * 7, 
+  maxAge: 60 * 60 * 24 * 7,
 };
 
 const USERS = [
@@ -32,7 +32,7 @@ let passwordHashCache: string | null = null;
 
 async function getPasswordHash(): Promise<string> {
   if (!passwordHashCache) {
-    passwordHashCache = await bcrypt.hash("GayathriIsLazy", 10);
+    passwordHashCache = await bcrypt.hash("Loungerboy.idiot#Rahul", 10);
   }
   return passwordHashCache;
 }
@@ -56,13 +56,13 @@ export async function validateCredentials(
 ): Promise<{ username: string } | null> {
   const users = await getUsers();
   const user = users.find((u) => u.username === username);
-  
+
   if (!user) {
     return null;
   }
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
-  
+
   if (!isValid) {
     return null;
   }
