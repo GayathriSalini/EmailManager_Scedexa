@@ -66,19 +66,19 @@ export async function POST(request: NextRequest) {
     const resendIds: string[] = [];
     const failedRecipients: string[] = [];
 
+    // Prepare signatures and final content (common for all recipients)
+    const htmlSignature = getEmailSignature(true);
+    const textSignature = getEmailSignature(false);
+
+    const finalHtml = html
+      ? `${html}${htmlSignature}`
+      : `<p>${emailBody.replace(/\n/g, '<br>')}</p>${htmlSignature}`;
+
+    const finalBody = `${emailBody}${textSignature}`;
+
     // Schedule email for each recipient via Resend
     for (const recipient of recipientList) {
       try {
-        // Append signature to both HTML and text content
-        const htmlSignature = getEmailSignature(true);
-        const textSignature = getEmailSignature(false);
-
-        const finalHtml = html
-          ? `${html}${htmlSignature}`
-          : `<p>${emailBody.replace(/\n/g, '<br>')}</p>${htmlSignature}`;
-
-        const finalBody = `${emailBody}${textSignature}`;
-
         const { data, error } = await resend.emails.send({
           from: fromAddress,
           to: [recipient],
