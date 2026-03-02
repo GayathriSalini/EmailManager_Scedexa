@@ -148,7 +148,7 @@ export default function SentPage() {
             from: account?.email || "",
           }))}
           type="sent"
-          selectedId={selectedEmail?._id}
+          selectedId={undefined}
           onSelect={(email) => {
             const original = emails.find((e) => e._id === email._id);
             if (original) setSelectedEmail(original);
